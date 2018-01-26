@@ -1,11 +1,15 @@
+boolean saveImg = false;
 float xC;
 float baseY;
 float lowY = 0;
+float lowYX = 0;
+float xMomentum = 0;
 float yMomentum = 0;
 float xMin = 1000;
 float xMax = 0;
 color skin = color (random(100,200),random(50,150),random(50,150));
 color shadow = color (random(0,50),random(0,100),random(0,100),50);
+int jkl = 0;
 
 // this version uses Bones and Nodes 
 
@@ -32,7 +36,7 @@ void setup(){
   bBackLow = new Bone(bRoot.x,scaleAvg(bPubic.y,bNeck.y,random(.2,.3)),bPubic,"bBackLow");
   bBackHigh = new Bone(bRoot.x,scaleAvg(bBackLow.y,bNeck.y,random(.2,.4)),bBackLow,"bBackHigh");
   bHead = new Bone(bRoot.x,scaleAvg(bNeck.y,bTop.y,random(.1,.2)),bNeck,"bHead");
-  bShoulder = new Bone(bRoot.x+(scaleAvg(bRoot.y,bTop.y,random(.075,.225))),scaleAvg(bNeck.y,bPubic.y,random(0,.4)),bNeck,"bShoulder");
+  bShoulder = new Bone(bRoot.x+(scaleAvg(bRoot.y,bTop.y,random(.075,.225))),scaleAvg(bNeck.y,bPubic.y,random(.05,.4)),bNeck,"bShoulder");
   bHip = new Bone(bRoot.x+(scaleAvg(bRoot.y,bTop.y,random(.075,.225))),bPubic.y+((bTop.y-bRoot.y)*random(.1)),bPubic,"bHip");
   bFoot = new Bone(scaleAvg(bHip.x,bShoulder.x,random(-.2,1.2))+((bTop.y-bRoot.y)*.05*random(-1,.5)),bRoot.y,bHip,"bFoot");
   bAnkle = new Bone(scaleAvg(bFoot.x,bRoot.x,random(.05,.15)),scaleAvg(bFoot.y,bHip.y,random(.05,.15)),bFoot,"bAnkle");
@@ -48,14 +52,14 @@ void setup(){
   bTop.assignParent(bHead);
   
   bPubic.setAngles(.1,-.1);
-  bKnee.setAngles(1,-.5);
-  bAnkle.setAngles(-1,0);
+  bKnee.setAngles(random(1.5),random(-.6,0));
+  bAnkle.setAngles(random(-2,-.5),0);
   bBackLow.setAngles(0,.1);
   bBackHigh.setAngles(random(-1,0),random(0,1));
   bNeck.setAngles(.1,-.1);
   bShoulder.setAngles(0,.5);
-  bElbow.setAngles(0,PI);
-  bWrist.setAngles(1,-bElbow.maxAngle);
+  bElbow.setAngles(0,random(-PI/2,PI));
+  bWrist.setAngles(1,-bElbow.maxAngle+random(-.5,.5));
   bHead.setAngles(-1,1);
   bTop.setAngles(1,-1);
   bFoot.setAngles(-1,1);
@@ -77,7 +81,7 @@ void setup(){
   heel = new Node(ankle.x,bRoot.y,bFoot,"heel");
   calf = new Node(scaleAvg(inKnee.x,bRoot.x,random(.3,.7)),avg(inKnee.y,ankle.y),bAnkle,"calf");
   outCalf = new Node(knee.x,avg(inKnee.y,calf.y),bKnee,"outCalf");
-  waist = new Node(scaleAvg(shoulder.x,hip.x,random(-.25,1.25)),scaleAvg(shoulder.y,hip.y,0.7),bBackLow,"waist");
+  waist = new Node(avg(shoulder.x,hip.x)+random(-10,10),scaleAvg(shoulder.y,hip.y,0.7),bBackLow,"waist");
   ribs = new Node(scaleAvg(waist.x,shoulder.x,.3),scaleAvg(waist.y,shoulder.y,.4),bBackHigh,"ribs");
   armpit = new Node(ribs.x,avg(shoulder.y,ribs.y),bBackHigh,"armpit");
   wrist = new Node(bWrist.x,bWrist.y,bWrist,"wrist");
@@ -87,8 +91,8 @@ void setup(){
   deltoid = new Node(scaleAvg(shoulder.x,deltoidEnd.x,random(.5,.7)),scaleAvg(shoulder.y,deltoidEnd.y,random(.3,.5)),bElbow,"deltoid");
   //hand = new Node(,,,"");
   //thumbJoin = new Node(,,,"");
-  headWid = new Node(scaleAvg(bRoot.y,top.y,random(.05,.1)),scaleAvg(top.y,neckBase.y,random(.1,.2)),bTop,"headWid");
-  neckWid = new Node(min(scaleAvg(headWid.x,bRoot.x,random(0.2,.5)),shoulder.x),avg(shoulder.y,neckBase.y),bShoulder,"neckWid");
+  headWid = new Node(scaleAvg(bRoot.y,top.y,random(.02,.07)),scaleAvg(top.y,neckBase.y,random(.1,.2)),bTop,"headWid");
+  neckWid = new Node(min(scaleAvg(headWid.x,bRoot.x,random(0,.5)),shoulder.x),avg(shoulder.y,neckBase.y),bShoulder,"neckWid");
   jaw = new Node(scaleAvg(neckWid.x,headWid.x,random(0,1)),scaleAvg(top.y,neckBase.y,random(0.7,0.8)),bTop,"jaw");
   neckTop = new Node(scaleAvg(bRoot.x,neckWid.x,random(.5,1)),jaw.y,bTop,"neckTop");
   chin = new Node(bRoot.x,avg(jaw.y,neckBase.y),bTop,"chin");
@@ -97,11 +101,11 @@ void setup(){
   mouthCorner = new Node(scaleAvg(jaw.x,bRoot.x,random(0,.5)),scaleAvg(eye.y,jaw.y,random(.4,.9)),bHead,"mouthCorner");
   mouthC = new Node(bRoot.x,scaleAvg(mouthCorner.y,chin.y,random(-.2,.5)),bHead,"mouthC");
   cup = new Node(scaleAvg(shoulder.x,neckWid.x,random(0.4,0.6)),scaleAvg(shoulder.y,waist.y,random(0.4,0.7)),bBackHigh,"cup");
-  cupLow = new Node(cup.x,cup.y-random(20),bBackHigh,"cupLow");
+  cupLow = new Node(cup.x,cup.y-random(40),bBackHigh,"cupLow");
   sPlexus = new Node(bRoot.x,scaleAvg(pubic.y,neckBase.y,random(0.5,0.65)),bBackHigh,"sPlexus");
   navel = new Node(bRoot.x,avg(sPlexus.y,pubic.y),bBackLow,"navel");
   inCup = new Node(scaleAvg(cup.x,sPlexus.x,random(.2,.8)),scaleAvg(navel.y,sPlexus.y,random(.2,.8)),bBackHigh,"inCup");
-  inCupLow = new Node(inCup.x,inCup.y-random(10),bBackHigh,"inCupLow");
+  inCupLow = new Node(inCup.x,inCup.y-random(20),bBackHigh,"inCupLow");
   inThigh = new Node(avg(pubic.x,hip.x),avg(groin.y,hip.y),bHip,"inThigh");
   //*/
   //      GET
@@ -118,6 +122,7 @@ void draw(){
   xMin = 1000;
   xMax = 0;
   background(200);
+  text(jkl++,20,20);
   //*
   bPubic.rotation();
   bKnee.rotation(1);
@@ -132,15 +137,18 @@ void draw(){
   bTop.rotation();
   bFoot.rotation();
   bRoot.place(false);
-  yMomentum -= 0.5;
+  yMomentum -= 0.4;
+  xMomentum *= .9;
   if (lowY > baseY) {
     bRoot.y -= (lowY-baseY);
     yMomentum += ((lowY-baseY)/2);
+    xMomentum += ((bRoot.y-(lowYX))/200);
   }
+  //bRoot.x += xMomentum;
   bRoot.y -= yMomentum;
   noStroke();
   fill(0,20);
-  ellipse(avg(xMin,xMax),baseY,xMax-xMin,(xMax-xMin)/5);
+  ellipse(avg(xMin,xMax),baseY,max(0,(xMax-xMin)*(bRoot.y/height)),max(0,((xMax-xMin)/5)*(bRoot.y/height)));
   
   //*/
   
@@ -152,7 +160,8 @@ void draw(){
   tri(neckTop,chin,neckBase);
   fill(shadow);
   noStroke();
-  tri(neckTop,chin,neckBase);
+  tri(neckTop,chin,sPlexus);
+  tri(neckTop,sPlexus,neckWid);
   fill(skin);
   stroke(skin);
   tri(top,headWid,jaw);
@@ -167,12 +176,15 @@ void draw(){
   tri(ribs,waist,navel);
   tri(waist,hip,navel);
   tri(groin,hip,navel);
+  tri(sPlexus,inCupLow,cupLow);
+  tri(sPlexus,cupLow,ribs);
   
   //  Draw Arm
   tri(shoulder,deltoid,deltoidEnd);
   tri(shoulder,elbow,armpit);
   tri(elbow,inElbow,armpit);
   tri(elbow,inElbow,wrist);
+  tri(armpit,cup,shoulder);
   
   //  Draw Leg
   tri(hip,thigh,knee);
@@ -188,22 +200,28 @@ void draw(){
   fill(shadow);
   noStroke();
   // Groin
-  tri(groin,inThigh,inKnee);
+  shadow(groin,pubic,hip);
+  //tri(groin,inThigh,inKnee);
   //tri(pubic,inThigh,groin);
   // Underarm
-  tri(inElbow,armpit,shoulder);
-  tri(shoulder,cup,armpit);
-  tri(armpit,ribs,cup);
-  tri(ribs,cup,cupLow);
-  tri(cup,cupLow,inCup);
-  tri(cupLow,inCup,inCupLow);
-  tri(inCup,inCupLow,sPlexus);
+  //tri(inElbow,armpit,shoulder);
+  shadow(shoulder,cup,armpit);
+  shadow(armpit,ribs,cup);
+  shadow(ribs,cup,cupLow);
+  shadow(cup,cupLow,inCup);
+  shadow(cupLow,inCup,inCupLow);
+  shadow(inCup,inCupLow,sPlexus);
   // foot
-  tri(ankle,heel,foot);
+  shadow(ankle,heel,foot);
   
   // eye
   ellipse(eye.currX,eye.currY,10,10);
   ellipse(eye.sibling.currX,eye.sibling.currY,10,10);
+  
+  if (saveImg == true){
+    if (jkl > 1000 && jkl < 1200) saveFrame("imgs/img-###.jpg");
+    if(jkl > 1200) exit();
+  }
 }
 
 float avg(float a, float b){
@@ -237,6 +255,16 @@ float randNoise(float a, int b, int c){
   }
   retVal /= b;
   return retVal;  
+}
+
+void shadow(Node a, Node b, Node c){
+  fill(skin);
+  stroke(skin);
+  tri(a,b,c);
+  
+  fill(shadow);
+  noStroke();
+  tri(a,b,c);
 }
 
 void tri(Node a, Node b, Node c){
@@ -472,7 +500,7 @@ class Node {
       currX = x;
       currY = y;
     }
-    if (currY > lowY) lowY = currY;
+    if (currY > lowY) {lowY = currY;lowYX = currX;}
     if (currX > xMax) xMax = currX;
     if (currX < xMin) xMin = currX;
   }
