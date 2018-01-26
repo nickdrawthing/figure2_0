@@ -142,9 +142,9 @@ void draw(){
   if (lowY > baseY) {
     bRoot.y -= (lowY-baseY);
     yMomentum += ((lowY-baseY)/2);
-    xMomentum += ((bRoot.y-(lowYX))/200);
+    xMomentum += (avg(avg(xMin,xMax)-lowYX,avg(top.currY,lowYX)-lowYX)/200);
   }
-  //bRoot.x += xMomentum;
+  bRoot.x += xMomentum;
   bRoot.y -= yMomentum;
   noStroke();
   fill(0,20);
